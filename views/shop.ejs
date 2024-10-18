@@ -1,0 +1,42 @@
+<h1>Shop</h1>
+<p>Your points: <span id="userPoints"><%= points %></span></p>
+
+<h2>Available Upgrades</h2>
+<ul>
+    <% shopItems.forEach((item) => { %>
+        <li>
+            <%= item.name %> - Cost: <%= item.cost %> points
+            <% if (purchasedItems.includes(item.effect)) { %>
+                <strong>(Purchased)</strong>
+            <% } else { %>
+                <button onclick="purchaseItem('<%= item.effect %>', '<%= item.cost %>')">Buy</button>
+            <% } %>
+        </li>
+    <% }); %>
+</ul>
+
+<script>
+    async function purchaseItem(itemEffect, itemCost) {
+        const userPoints = parseInt(document.getElementById('userPoints').textContent);
+
+        if (userPoints < itemCost) {
+            alert('Not enough points to buy this item.');
+            return;
+        }
+
+        const response = await fetch('/purchase-item', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ itemEffect, itemCost })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            document.getElementById('userPoints').textContent = result.newPoints;
+            alert('Item purchased!');
+            location.reload(); // Refresh to show purchased status
+        } else {
+            alert(result.message);
+        }
+    }
+</script>

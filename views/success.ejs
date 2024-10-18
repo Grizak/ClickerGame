@@ -1,0 +1,15 @@
+<h1>Success</h1>
+<h3>You have <%= message %> successfully</h3>
+<p>You will be redicted in a second</p>
+
+<script>
+  function redictAfterDelay (time) {
+    setTimeout(function() {
+      window.location.href = "/game"
+    }, time);
+  };
+
+  window.onload = function() {
+    redictAfterDelay(3000)
+  };
+</script>
