@@ -22,7 +22,7 @@ mongoose.connect(mongoURI)
 
 // Session setup
 app.use(session({
-    secret: 'your_secret_key',
+    secret: process.env.SECRET,
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({ mongoUrl: mongoURI }),
@@ -48,7 +48,8 @@ app.post('/register', async (req, res) => {
   // Check if username is already taken
   const existingUser = await User.findOne({ username });
   if (existingUser) {
-      return res.status(400).json({ error: 'Username is already taken' });
+    const user = req.session.userId ? req.session.userId : null;
+    return res.render('error', { title: "Error", user, error: "Username already taken" });
   }
 
   // Hash the password
@@ -78,13 +79,13 @@ app.post('/login', async (req, res) => {
   // Find user by username
   const user = await User.findOne({ username });
   if (!user) {
-      return res.status(400).json({ error: 'Invalid username or password' });
+    return res.render('error', { title: "Error", user, error: "Invalid username" });
   }
 
   // Compare the password with the hashed password
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
-      return res.status(400).json({ error: 'Invalid username or password' });
+    return res.status(400).json({ error: 'Invalid password' });
   }
 
   // Set session user ID
@@ -169,8 +170,10 @@ app.get('/game', isAuthenticated, async (req, res) => {
           return res.status(404).send('User not found');
       }
 
+      const purchasedItems = user.purchasedItems || [];
+
       // Pass the user's points to the EJS template
-      res.render('game', { title: "Home", user, points: user.points || 0 });  // Default to 0 if points is undefined
+      res.render('game', { title: "Home", user, points: user.points || 0, purchasedItems });  // Default to 0 if points is undefined
   } catch (error) {
       console.error('Error fetching user data:', error);
       res.status(500).send('Internal Server Error');
@@ -182,7 +185,9 @@ app.get('/game', isAuthenticated, async (req, res) => {
 app.get('/shop', isAuthenticated, async (req, res) => {
   const shopItems = [
       { name: 'Double Click Power', cost: 50, effect: 'double-click-power' },
-      { name: 'Auto Clicker', cost: 100, effect: 'auto-clicker' }
+      { name: 'Auto Clicker', cost: 100, effect: 'auto-clicker' },
+      { name: 'Triple Click Power', cost: 150, effect: 'triple-click-power' },
+      { name: 'Mega Click', cost: 250, effect: 'mega-click' },
   ];
 
   try {
