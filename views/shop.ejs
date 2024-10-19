@@ -7,7 +7,7 @@
         <li>
             <%= item.name %> - Cost: <%= item.cost %> points
             <% if (purchasedItems.includes(item.effect)) { %>
-                <strong>(Purchased)</strong>
+                <button disabled>Purchased</button>
             <% } else { %>
                 <button onclick="purchaseItem('<%= item.effect %>', '<%= item.cost %>')">Buy</button>
             <% } %>

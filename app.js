@@ -15,6 +15,7 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views')); // Ensure you have 'views' directory
 app.use(expressLayouts);
 app.set('layout', 'layouts/layout');
+app.set(express.static(path.join(__dirname, 'public')));
 
 mongoose.connect(mongoURI)
   .then(() => console.log('Connected to MongoDB'))
@@ -38,7 +39,7 @@ function isAuthenticated(req, res, next) {
     if (req.session.userId) {
         next();
     } else {
-        res.status(401).json({ error: 'Unauthorized access' });
+        res.render('error', { title: "Error", error: "You have to be loged in to view this page", target: "/login" })
     }
 }
 
@@ -185,9 +186,15 @@ app.get('/game', isAuthenticated, async (req, res) => {
 app.get('/shop', isAuthenticated, async (req, res) => {
   const shopItems = [
       { name: 'Double Click Power', cost: 50, effect: 'double-click-power' },
+      { name: 'Triple Click Power', cost: 200, effect: 'triple-click-power' },
+      { name: 'Quadruple Click Power', cost: 400, effect: 'quadruple-click-power' },
+      { name: 'Mega Click', cost: 600, effect: 'mega-click' },
+      { name: 'Infinite Click Power', cost: 60000, effect: 'infinite-click-power' },
       { name: 'Auto Clicker', cost: 100, effect: 'auto-clicker' },
-      { name: 'Triple Click Power', cost: 150, effect: 'triple-click-power' },
-      { name: 'Mega Click', cost: 250, effect: 'mega-click' },
+      { name: 'Rapid Auto Clicker', cost: 2000, effect: 'rapid-auto-clicker' },
+      { name: 'Click Multiplier', cost: 500, effect: 'click-multiplier' },
+      { name: 'Golden Click', cost: 750, effect: 'golden-click' },
+      { name: 'Luck Booster', cost: 800, effect: 'luck-booster' },
   ];
 
   try {
