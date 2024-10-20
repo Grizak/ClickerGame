@@ -1,6 +1,70 @@
-<h2>Leaderboard</h2>
-<ul>
-    <% users.forEach(user => { %>
-        <li><%= user.username %>: <%= user.score %> points</li>
-    <% }) %>
-</ul>
+<p>Score: <strong id="score"><%= score %></strong></p>
+
+<div class="leaderboard">
+    <h2>Leaderboard</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Player</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+      <tbody id="leaderboard-body">
+        <!-- Leaderboard rows will be dynamically injected here -->
+      </tbody>
+    </table>
+  </div>
+  <h1>Submit Your Score?</h1>
+  <form id="submit-score-form" method="POST" action="/submit">
+    <input type="text" name="playerName" placeholder="Enter your name" required>
+    <button type="submit">Submit Score</button>
+  </form>
+  
+  <script>
+    async function loadLeaderboard() {
+      try {
+        const response = await fetch('/top');
+        const leaderboard = await response.json();
+        
+        const tbody = document.getElementById('leaderboard-body');
+        tbody.innerHTML = '';
+  
+        leaderboard.forEach((player, index) => {
+          const row = `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${player.playerName}</td>
+              <td>${player.score}</td>
+            </tr>
+          `;
+          tbody.innerHTML += row;
+        });
+      } catch (error) {
+        console.error('Error fetching leaderboard:', error);
+      }
+    }
+    
+    document.getElementById('submit-score-form').onsubmit = function(e) {
+        e.preventDefault(); // Prevent default form submission
+
+        const playerName = document.querySelector('input[name="playerName"]').value;
+        const score = document.getElementById('score').textContent;
+
+        fetch('/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerName, score })
+        })
+        .then(response => response.text())
+        .then(result => {
+            alert(result)
+            location.reload()
+        })
+        .catch(error => console.error('Error submitting score:', error));
+    };
+
+    // Load leaderboard on page load
+    window.onload = loadLeaderboard;
+  </script>
+  

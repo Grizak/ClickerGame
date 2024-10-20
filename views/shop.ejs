@@ -1,42 +1,42 @@
-<h1>Shop</h1>
-<p>Your points: <span id="userPoints"><%= points %></span></p>
-
-<h2>Available Upgrades</h2>
-<ul>
-    <% shopItems.forEach((item) => { %>
+<div id="shop">
+    <h2>Shop</h2>
+    <p>Clicks: <strong id="clickCount"><%= points %></strong></p>
+    <ul id="shopItems">
+      <% shopItems.forEach(item => { %>
         <li>
-            <%= item.name %> - Cost: <%= item.cost %> points
-            <% if (purchasedItems.includes(item.effect)) { %>
-                <button disabled>Purchased</button>
-            <% } else { %>
-                <button onclick="purchaseItem('<%= item.effect %>', '<%= item.cost %>')">Buy</button>
-            <% } %>
+            <span><%= item.name %> - Cost: <%= item.cost %> clicks</span>
+            <button onclick="purchaseItem('<%= item.name %>', parseInt('<%= item.cost %>'))">Buy</button>
         </li>
-    <% }); %>
-</ul>
+      <% }); %>
+    </ul>
+</div>
 
 <script>
-    async function purchaseItem(itemEffect, itemCost) {
-        const userPoints = parseInt(document.getElementById('userPoints').textContent);
+function purchaseItem(itemName, itemCost) {
+    const clickCount = document.getElementById('clickCount');
+    let currentClicks = parseInt(clickCount.textContent);
 
-        if (userPoints < itemCost) {
-            alert('Not enough points to buy this item.');
-            return;
-        }
+    if (currentClicks >= itemCost) {
+        currentClicks -= itemCost;
+        clickCount.textContent = currentClicks;
 
-        const response = await fetch('/purchase-item', {
+        // Here, you can also send a request to your server to update the player's status
+        fetch('/purchase', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ itemEffect, itemCost })
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ itemName: itemName })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data.message); // Handle the response if needed
+        })
+        .catch(error => {
+            console.error('Error:', error);
         });
-
-        const result = await response.json();
-        if (result.success) {
-            document.getElementById('userPoints').textContent = result.newPoints;
-            alert('Item purchased!');
-            location.reload(); // Refresh to show purchased status
-        } else {
-            alert(result.message);
-        }
+    } else {
+        alert('Not enough clicks!');
     }
+}
 </script>

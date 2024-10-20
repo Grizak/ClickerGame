@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const bcrypt = require('bcrypt');
-const User = require('./models/User'); // Adjust the path as necessary
+const User = require('./models/User');
+const Leaderboard = require('./models/Leaderboard');
 const app = express();
 require('dotenv').config();
 const expressLayouts = require('express-ejs-layouts');
@@ -12,7 +13,7 @@ const path = require('path');
 const mongoURI = process.env.DBURI
 
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views')); // Ensure you have 'views' directory
+app.set('views', path.join(__dirname, 'views'));
 app.use(expressLayouts);
 app.set('layout', 'layouts/layout');
 app.set(express.static(path.join(__dirname, 'public')));
@@ -20,6 +21,16 @@ app.set(express.static(path.join(__dirname, 'public')));
 mongoose.connect(mongoURI)
   .then(() => console.log('Connected to MongoDB'))
   .catch((err) => console.error('Error connecting to mongoDB: ' + err));
+
+
+// Add the shop items
+const shopItems = [
+  { name: "Double Click Power", cost: 100, effect: "Doubles your clicks per second." },
+  { name: "Auto Clicker", cost: 200, effect: "Automatically clicks for you." },
+  { name: "Triple Click Power", cost: 300, effect: "Triples your clicks per second." },
+  { name: "Mega Click", cost: 500, effect: "Gives you 50 clicks instantly." },
+];
+
 
 // Session setup
 app.use(session({
@@ -33,6 +44,12 @@ app.use(session({
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Middleware to make the user available in all EJS views
+app.use((req, res, next) => {
+  res.locals.user = req.session.userId ? req.session.userId : null;
+  next();
+});
 
 // Middleware for authentication
 function isAuthenticated(req, res, next) {
@@ -116,36 +133,49 @@ app.post('/update-points', isAuthenticated, async (req, res) => {
   res.json({ message: 'Points updated' });
 });
 
-app.post('/purchase-item', isAuthenticated, async (req, res) => {
-  const { itemEffect, itemCost } = req.body;
+// app.js
 
-  try {
-      // Find the user
-      const user = await User.findById(req.session.userId);
+app.post('/purchase', (req, res) => {
+  const user = req.session.userId ? req.session.userId : null;
+  const itemName = req.body.itemName;
+  let points = user.points;
 
-      // Check if they have enough points
-      if (user.points < itemCost) {
-          return res.json({ success: false, message: 'Not enough points.' });
-      }
-
-      // Check if they already bought the item
-      if (user.purchasedItems && user.purchasedItems.includes(itemEffect)) {
-          return res.json({ success: false, message: 'Item already purchased.' });
-      }
-
-      // Deduct points and store the purchased item
-      user.points -= itemCost;
-      user.purchasedItems = user.purchasedItems || [];
-      user.purchasedItems.push(itemEffect);
-
-      await user.save();
-
-      res.json({ success: true, newPoints: user.points });
-  } catch (error) {
-      console.error('Error purchasing item:', error);
-      res.status(500).json({ success: false, message: 'Failed to purchase item.' });
+  if (!req.session.purchasedItems) {
+    req.session.purchasedItems = [];
   }
+
+  let purchasedItems = req.session.purchasedItems;
+  if (purchasedItems.includes(itemName)) {
+    return res.json({ message: "Item already purchased!" });
+  }
+
+  // Example effect handling based on item purchased
+  switch (itemName) {
+      case "Double Click Power":
+          // Implement your effect logic here
+          // For example, increase the player's click power
+          break;
+      case "Auto Clicker":
+          // Start an auto-clicker
+          break;
+      case "Triple Click Power":
+          // Increase click power
+          break;
+      case "Mega Click":
+          points += 50; // Example effect
+          break;
+  }
+
+  user.points = points; // Update session points
+  res.json({ message: `${itemName} purchased!`, newPoints: points, purchasedItems: purchasedItems });
 });
+
+
+app.get('/shop', (req, res) => {
+  const user = req.session.userId ? req.session.userId : null;
+  res.render('shop', { points: user.points, shopItems: shopItems });
+});
+
 
 app.get('/', (req, res) => {
   const user = req.session.userId ? req.session.userId : null;
@@ -174,43 +204,39 @@ app.get('/game', isAuthenticated, async (req, res) => {
       const purchasedItems = user.purchasedItems || [];
 
       // Pass the user's points to the EJS template
-      res.render('game', { title: "Home", user, points: user.points || 0, purchasedItems });  // Default to 0 if points is undefined
+      res.render('game', { title: "Home", points: user.points || 0, purchasedItems, user });  // Default to 0 if points is undefined
   } catch (error) {
       console.error('Error fetching user data:', error);
       res.status(500).send('Internal Server Error');
   }
 });
 
-
-// Shop Route
-app.get('/shop', isAuthenticated, async (req, res) => {
-  const shopItems = [
-      { name: 'Double Click Power', cost: 50, effect: 'double-click-power' },
-      { name: 'Triple Click Power', cost: 200, effect: 'triple-click-power' },
-      { name: 'Quadruple Click Power', cost: 400, effect: 'quadruple-click-power' },
-      { name: 'Mega Click', cost: 600, effect: 'mega-click' },
-      { name: 'Infinite Click Power', cost: 60000, effect: 'infinite-click-power' },
-      { name: 'Auto Clicker', cost: 100, effect: 'auto-clicker' },
-      { name: 'Rapid Auto Clicker', cost: 2000, effect: 'rapid-auto-clicker' },
-      { name: 'Click Multiplier', cost: 500, effect: 'click-multiplier' },
-      { name: 'Golden Click', cost: 750, effect: 'golden-click' },
-      { name: 'Luck Booster', cost: 800, effect: 'luck-booster' },
-  ];
-
+app.post('/submit', async (req, res) => {
+  const { playerName, score } = req.body;
+  
   try {
-      // Find the user and pass their points and items to the shop
-      const user = await User.findById(req.session.userId);
-      res.render('shop', { title: "Shop", user, points: user.points, purchasedItems: user.purchasedItems || [], shopItems });
+    const newScore = new Leaderboard({ playerName, score });
+    await newScore.save();
+    res.status(200).send('Score submitted successfully!');
   } catch (error) {
-      console.error('Error fetching shop data:', error);
-      res.status(500).send('Internal Server Error');
+    res.status(500).send('Error saving score');
   }
 });
 
-
-app.get('/leaderboard', isAuthenticated, async (req, res) => {
-  // Fetch leaderboard logic...
+// GET route to fetch leaderboard (top 10 scores)
+app.get('/top', async (req, res) => {
+  try {
+    const leaderboard = await Leaderboard.find().sort({ score: -1 }).limit(10);
+    res.status(200).json(leaderboard)
+  } catch (error) {
+    res.status(500).send('Error fetching leaderboard');
+  }
 });
+
+app.get('/leaderboard', async (req, res) => {
+  const user = await User.findById(req.session.userId);
+  res.render('leaderboard', { title: "Leaderboard", score: user.points, user })
+})
 
 // Start the server
 const PORT = process.env.PORT;
