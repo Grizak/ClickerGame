@@ -51,14 +51,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Middleware for authentication
-function isAuthenticated(req, res, next) {
-    if (req.session.userId) {
-        next();
-    } else {
-        res.render('error', { title: "Error", error: "You have to be loged in to view this page", target: "/login" })
-    }
-}
 
 app.post('/register', async (req, res) => {
   const { username, password } = req.body;
@@ -124,7 +116,7 @@ app.get('/logout', (req, res) => {
   });
 });
 
-app.post('/update-points', isAuthenticated, async (req, res) => {
+app.post('/update-points', async (req, res) => {
   const { points } = req.body;
 
   // Update user's points in the database
@@ -192,7 +184,7 @@ app.get('/login', (req, res) => {
   res.render('login', { title: "Login", user });
 });
 
-app.get('/game', isAuthenticated, async (req, res) => {
+app.get('/game', async (req, res) => {
   try {
       // Find the user in the database using the session's userId
       const user = await User.findById(req.session.userId);
