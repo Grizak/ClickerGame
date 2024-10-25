@@ -9,6 +9,7 @@ const app = express();
 require('dotenv').config();
 const expressLayouts = require('express-ejs-layouts');
 const path = require('path');
+const cors = require('cors');
 
 const mongoURI = process.env.DBURI
 
@@ -31,6 +32,12 @@ const shopItems = [
   { name: "Mega Click", cost: 500, effect: "Gives you 50 clicks instantly." },
 ];
 
+app.use(
+  cors({
+    origin: 'https://itch.io', // Allow requests from `itch.io`
+    credentials: true, // Include cookies in requests
+  })
+);
 
 // Session setup
 app.use(session({
@@ -38,7 +45,11 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({ mongoUrl: mongoURI }),
-    cookie: { maxAge: 180 * 60 * 1000 }
+    cookie: { 
+      maxAge: 180 * 60 * 1000,
+      secure: true, // Ensure this is set to true if you’re using HTTPS
+      sameSite: 'none',
+    }
 }));
 
 // Middleware for parsing JSON and URL-encoded data
