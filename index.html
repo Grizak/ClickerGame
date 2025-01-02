@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clicker Game</title>
+    <link rel="stylesheet" href="main.css" />
+  </head>
+  <body>
+    <div id="game">
+      <h1>Cookie Clicker</h1>
+      <p>Cookies: <span id="score">0</span></p>
+      <button id="clickButton">🍪 Click Me!</button>
+      <div id="upgrades">
+        <button id="upgrade" disabled>
+          Buy Click Upgrade (<span id="upgrade-cost">10 cookies</span>)
+        </button>
+        <button id="auto-clicker" disabled>
+          Buy Auto Clicker (<span id="auto-clicker-cost">50 cookies</span>)
+        </button>
+        <button id="auto-clicker-pro" disabled>
+          Buy Auto Clicker Pro (<span id="auto-clicker-pro-cost"
+            >200 cookies</span
+          >)
+        </button>
+        <button id="double-click" disabled>
+          Double Cookies Per Click (<span id="double-click-cost"
+            >100 cookies</span
+          >
+          )
+        </button>
+        <button id="super-auto-clicker" disabled>
+          Buy Super Auto-Clicker (<span id="super-auto-cost">500 cookies</span>)
+        </button>
+        <button class="reset" id="reset">Reset Game</button>
+      </div>
+    </div>
+    <script src="main.js"></script>
+  </body>
+</html>
