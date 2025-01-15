@@ -119,6 +119,7 @@ function checkUpgrades() {
 // Update score display
 function updateScore() {
   scoreDisplay.textContent = score;
+  checkUpgrades();
 }
 
 // Add event listener for clicking
@@ -291,14 +292,22 @@ resetButton.addEventListener("click", () => {
   autoClickerProCost = 200;
   doubleClickCost = 100;
   superAutoCost = 500;
+
+  if (autoClickerInterval) {
+    clearInterval(autoClickerInterval);
+  }
+  if (autoClickerProInterval) {
+    clearInterval(autoClickerProInterval);
+  }
+  if (superAutoClickerInterval) {
+    clearInterval(superAutoClickerInterval);
+  }
+
+  
   autoClickerInterval = null;
   autoClickerProInterval = null;
   superAutoClickerInterval = null;
-
-  clearInterval(autoClickerInterval);
-  clearInterval(autoClickerProInterval);
-  clearInterval(superAutoClickerInterval);
-
+  
   // Clear localstorage
   localStorage.clear();
 
