@@ -292,17 +292,10 @@ resetButton.addEventListener("click", () => {
   autoClickerProCost = 200;
   doubleClickCost = 100;
   superAutoCost = 500;
-
-  if (autoClickerInterval) {
-    clearInterval(autoClickerInterval);
-  }
-  if (autoClickerProInterval) {
-    clearInterval(autoClickerProInterval);
-  }
-  if (superAutoClickerInterval) {
-    clearInterval(superAutoClickerInterval);
-  }
-
+  
+  clearInterval(autoClickerInterval);
+  clearInterval(autoClickerProInterval);
+  clearInterval(superAutoClickerInterval);
   
   autoClickerInterval = null;
   autoClickerProInterval = null;
